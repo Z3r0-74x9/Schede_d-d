@@ -1,0 +1,114 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffcc00">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scheda Creator - Switch Mode</title>
+  <style>
+    :root {
+      --bg: #111;
+      --fg: white;
+      --accent: #ffcc00;
+      --input-bg: #222;
+    }
+    body.light {
+      --bg: #ffffff;
+      --fg: #000000;
+      --input-bg: #f0f0f0;
+    }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    input, textarea {
+      width: 100%; padding: 10px; margin-bottom: 10px;
+      background: var(--input-bg); color: var(--fg);
+      border: none; border-radius: 6px;
+    }
+    button {
+      padding: 10px 20px; background: var(--accent); color: black;
+      border: none; border-radius: 6px; margin-bottom: 20px;
+    }
+    .toggle-btn {
+      float: right; font-size: 14px; background: transparent; color: var(--fg);
+    }
+  </style>
+</head>
+<body class="dark">
+  <button class="toggle-btn" onclick="toggleTheme()">🌓 Cambia Tema</button>
+  <h1>Scheda Creator</h1>
+  <input placeholder="Nome" id="name">
+  <input placeholder="Classe & Livelli" id="class_levels">
+  <input placeholder="Razza" id="race">
+  <input placeholder="Background" id="background">
+  <input placeholder="Allineamento" id="alignment">
+  <input placeholder="Esperienza" id="experience_points">
+  <input placeholder="Forza" id="STR" type="number">
+  <input placeholder="Destrezza" id="DEX" type="number">
+  <input placeholder="Costituzione" id="CON" type="number">
+  <input placeholder="Intelligenza" id="INT" type="number">
+  <input placeholder="Saggezza" id="WIS" type="number">
+  <input placeholder="Carisma" id="CHA" type="number">
+  <input placeholder="PF" id="hit_points">
+  <input placeholder="CA" id="armor_class">
+  <input placeholder="Iniziativa" id="initiative">
+  <input placeholder="Velocità" id="speed">
+  <input placeholder="Dadi Vita" id="hit_dice">
+  <textarea placeholder="Attacchi (nome|bonus|danno)" id="attacks"></textarea>
+  <textarea placeholder="Equipaggiamento" id="equipment"></textarea>
+  <textarea placeholder="Tratti & Abilità" id="features_traits"></textarea>
+  <textarea placeholder="Incantesimi (Livello: inc1, inc2...)" id="spells"></textarea>
+  <button onclick="download()">Scarica JSON</button>
+
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle("light");
+    }
+
+    function download() {
+      const getVal = id => document.getElementById(id).value;
+      const data = {
+        name: getVal("name"), class_levels: getVal("class_levels"),
+        race: getVal("race"), background: getVal("background"),
+        alignment: getVal("alignment"), experience_points: getVal("experience_points"),
+        abilities: {
+          STR: parseInt(getVal("STR")), DEX: parseInt(getVal("DEX")),
+          CON: parseInt(getVal("CON")), INT: parseInt(getVal("INT")),
+          WIS: parseInt(getVal("WIS")), CHA: parseInt(getVal("CHA"))
+        },
+        armor_class: parseInt(getVal("armor_class")),
+        initiative: parseInt(getVal("initiative")),
+        speed: parseInt(getVal("speed")),
+        hit_points: parseInt(getVal("hit_points")),
+        hit_dice: getVal("hit_dice"),
+        attacks: getVal("attacks").split("\n").map(a => {
+          const [name, bonus, damage] = a.split("|");
+          return { name, bonus, damage };
+        }),
+        equipment: getVal("equipment").split("\n"),
+        features_traits: getVal("features_traits").split("\n"),
+        spells: {}
+      };
+      getVal("spells").split("\n").forEach(l => {
+        const [lvl, list] = l.split(":");
+        if (lvl && list) data.spells[lvl.trim()] = list.split(",").map(s => s.trim());
+      });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = data.name.replace(/\s+/g, "_") + ".json";
+      a.click();
+    }
+  </script>
+</body>
+</html>
